@@ -4,7 +4,7 @@ import { Thermometer, Droplets, Fan, Users, ChevronDown } from "lucide-react";
 
 const CLIENT_ID = "22353c82-e331-4fef-9285-9a5e2d96301a";   // Client ID ของ Device_1
 const USERNAME  = "8wV47wmmzgRF8Bsqnmeooa3NEgAiRNjp";       // Token ของ Device_1
-const PASSWORD  = "b4xJ9ipYic88gyfMaX7NmiYJ5Ek6coiN";       // Secret ของ Device_1 หรือ "" ถ้าไม่ใช้
+const PASSWORD  = "";       // Secret ของ Device_1 หรือ "" ถ้าไม่ใช้
 
 const TOPIC = "@msg/room1/sensor";
 const MQTT_URL = "wss://mqtt.netpie.io:443/mqtt"
@@ -20,7 +20,7 @@ interface SensorDataType {
     isConnected: boolean;
 }
 
-const stopLoadingDots = true
+const stopLoadingDots = !true
 
 export default function MainPage() {
 
@@ -140,7 +140,7 @@ export default function MainPage() {
         }
     }, [sensorData.isConnected]);
 
-    const detectionValue = sensorData.tracking === "1" ? 1 : 0;
+    const detectionValue = Number(sensorData.tracking) === 1 ? 1 : 0;
     const fanValue = sensorData.fan === "ON";
     const tempValue = typeof sensorData.temp === 'number' ? sensorData.temp : parseFloat(sensorData.temp.toString() || '0');
     const humValue = typeof sensorData.hum === 'number' ? sensorData.hum : parseFloat(sensorData.hum.toString() || '0');
