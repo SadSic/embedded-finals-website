@@ -10,13 +10,20 @@ import { Thermometer, Droplets, Fan, Users, ChevronDown} from "lucide-react";
 
 // Peng
 
-const CLIENT_ID = "47c27d0b-7e62-459b-8163-c1d24351b8d1";   // Client ID ของ Device_1
-const USERNAME  = "MHX8XnbrSyJth41kr5Z9gTDURCoKgWPr";       // Token ของ Device_1
-const PASSWORD  = "APdgUtTcYStKPgWheTjwbBEenvojVJjx";       // Secret ของ Device_1 หรือ "" ถ้าไม่ใช้
+// const CLIENT_ID = "47c27d0b-7e62-459b-8163-c1d24351b8d1";   // Client ID ของ Device_1
+// const USERNAME  = "MHX8XnbrSyJth41kr5Z9gTDURCoKgWPr";       // Token ของ Device_1
+// const PASSWORD  = "APdgUtTcYStKPgWheTjwbBEenvojVJjx";       // Secret ของ Device_1 หรือ "" ถ้าไม่ใช้
+
+
+// Pai
+const CLIENT_ID = "c0809376-3f43-4d32-b508-f684fa070dd8";   // Client ID ของ Device_1
+const USERNAME  = "K5bbdbWjJUWRor9bSaMBCzKpd69F33BF";       // Token ของ Device_2
+const PASSWORD  = "geYMVXufQb24HW7wxWcqRcGBwSDt9MnW";       // Secret ของ Device_2 หรือ "" ถ้าไม่ใช้
 
 const TOPIC = "@msg/room1/sensor";
 const MQTT_URL = "wss://mqtt.netpie.io:443/mqtt";
 
+const GOOGLE_SHEET_URL = "https://script.google.com/macros/s/AKfycbxeEBXZL9YmiKC71RUnP5iUj8Rfd23iyb2_i1mhMh34fvLOI4nQb7pWq9L-dm2qpMYGHw/exec";
 
 interface SensorDataType {
     temp: number | string;
@@ -40,11 +47,14 @@ export default function MainPage() {
     const [mode, setMode] = useState("Auto");
     const [temperature, setTemperature] = useState<number>(25.0);
 
+    // State สำหรับเก็บค่าจาก Google Sheet
+    const [sheetDetection, setSheetDetection] = useState<number>(0);
+
     const [sensorData, setSensorData] = useState<SensorDataType>({
         temp: 0,
         hum: 0,
         infrared: "-",
-        tracking: 0,
+        tracking: 0, // ค่านี้จะไม่ถูกใช้แสดงผลแล้ว จะใช้ sheetDetection แทน
         flame: "Safe",
         fan: 0,
         updated: "-",
@@ -52,7 +62,6 @@ export default function MainPage() {
     });
 
     const [dots, setDots] = useState("");
-
     const clientRef = useRef<any>(null);
 
     function validateData(value: string | number) {
@@ -68,9 +77,38 @@ export default function MainPage() {
         return value;
     }
 
+    // --- ส่วนที่เพิ่ม: ดึงข้อมูลจาก Google Sheet ---
+    useEffect(() => {
+        const fetchSheetData = async () => {
+            if (!GOOGLE_SHEET_URL || GOOGLE_SHEET_URL.includes("YOUR_GOOGLE")) return;
+            
+            try {
+                const response = await fetch(GOOGLE_SHEET_URL);
+                const data = await response.json();
+                
+                // สมมติว่า Google Script return กลับมาเป็น { "detection": 5 }
+                if (data && data.detection !== undefined) {
+                    console.log("Sheet Data:", data);
+                    setSheetDetection(Number(data.detection));
+                }
+            } catch (error) {
+                console.error("Error fetching Google Sheet:", error);
+            }
+        };
+
+        // ดึงครั้งแรกทันที
+        fetchSheetData();
+
+        // ตั้งเวลาให้ดึงข้อมูลใหม่ทุกๆ 2 วินาที (Polling)
+        const intervalId = setInterval(fetchSheetData, 2000);
+
+        return () => clearInterval(intervalId);
+    }, []);
+
+    // --- MQTT Logic (คงเดิม) ---
     useEffect(() => {
         if (typeof (window as any).mqtt === 'undefined') {
-            console.error("MQTT client library not found. Please ensure mqtt.min.js is loaded.");
+            console.error("MQTT client library not found.");
             return;
         }
 
@@ -90,7 +128,6 @@ export default function MainPage() {
                 console.log("Connected to NetPIE");
                 setSensorData(prev => ({ ...prev, isConnected: true }));
                 
-                // Extra safety check before subscribing
                 if (client.connected) {
                     client.subscribe(TOPIC, { qos: 0 }, (err: any) => {
                         if (err) console.error("Subscribe error:", err);
@@ -110,27 +147,12 @@ export default function MainPage() {
             });
 
             client.on("message", (topic: string, message: any) => {
-                console.log("=== MQTT MESSAGE RECEIVED ===");
-                console.log("Topic:", topic);
-                console.log("Raw message:", message.toString());
-
                 try {
                     const data = JSON.parse(message.toString());
-                    console.log("Parsed JSON:", data);
-                    console.log("-----------------------------");
-                    console.log("Temp     :", data.temp);
-                    console.log("Humidity :", data.hum);
-                    console.log("Infrared :", data.infrared);
-                    console.log("Tracking :", data.tracking);
-                    console.log("Flame    :", data.flame);
-                    console.log("Fan      :", data.fan);
-                    console.log("=============================");
-
                     const now = new Date().toLocaleTimeString();
 
                     setSensorData(prev => {
                         const newState: any = { updated: now };
-
                         if (data.temp !== undefined) newState.temp = Number(data.temp).toFixed(2);
                         if (data.hum !== undefined) newState.hum = Number(data.hum).toFixed(2);
                         if (data.infrared !== undefined) newState.infrared = data.infrared;
@@ -144,14 +166,11 @@ export default function MainPage() {
                     console.error("JSON parse error:", e);
                 }
             });
-
         }
 
-        // Cleanup: Closes connection when you leave the page
         return () => {
             if (clientRef.current) {
-                console.log("MQTT client disconnected on component unmount.");
-                clientRef.current.end(true); // Force clear the connection
+                clientRef.current.end(true);
                 clientRef.current = null;
             }
         };
@@ -163,16 +182,18 @@ export default function MainPage() {
                 setDots("");
                 return;
             }
-
             const interval = setInterval(() => {
                 setDots((prev) => (prev.length === 3 ? "" : prev + "."));
             }, 500);
-
             return () => clearInterval(interval);
         }
     }, [sensorData.isConnected]);
 
-    const detectionValue = validateData(sensorData.tracking);
+    // --- แก้ไขตรงนี้: เปลี่ยนแหล่งข้อมูล Detection ---
+    // เดิม: const detectionValue = validateData(sensorData.tracking);
+    // ใหม่: ใช้ค่าจาก Google Sheet
+    const detectionValue = validateData(sheetDetection); 
+    
     const fanValue = sensorData.fan === 1 ? true : false;
     const tempValue = validateData(sensorData.temp);
     const humValue = validateData(sensorData.hum);
@@ -180,19 +201,16 @@ export default function MainPage() {
     return <div className="min-h-screen w-full flex flex-col items-center justify-center
         bg-[linear-gradient(45deg,_#B5728E_0%,_#DA7F7D_25%,_#EBB58A_75%,_#F4D797_100%)]">
         
-        
         <div className="backdrop-blur-2xl bg-white/30 border border-white/30 rounded-3xl
                 p-10 text-white flex flex-col p-[48px] gap-[24px] items-center">
-            {/* Header */}
+            
             <h1 className="text-[#404040] font-bold font-inter">Smart Pudlom</h1>
 
-            {/* Card */}
             <div className="flex flex-row gap-[16px]">
 
-                {/* ESP */}
+                {/* ESP Control Panel (ส่วนซ้าย) */}
                 <div className="bg-white/30 rounded-2xl font-bold font-inter text-[#404040] p-[32px]
                     flex flex-col items-center justify-between">
-                    {/* Image */}
                     <div className="w-[150px] h-[150px] rounded-full bg-white shadow-lg flex
                         items-center justify-center overflow-hidden">
                         <img
@@ -202,13 +220,11 @@ export default function MainPage() {
                         />
                     </div>
 
-                    {/* Name */}
                     <div className="font-bold font-inter text-[#404040] text-2xl mt-4">
                         ESP 32
                     </div>
                     
                     <div className="h-[160px] flex flex-col gap-6">
-                        {/* Status */}
                         <div className="flex flex-row self-start justify-center">
                             <div className="font-bold font-inter text-[#404040] text-md">
                                 Status: 
@@ -238,9 +254,7 @@ export default function MainPage() {
                                                 text-lg w-8 h-8 bg-white/90 focus:outline-none border-none rounded-xl
                                                 flex items-center justify-center`}
                                             disabled={!isActive && mode === "Auto"}
-                                        >
-                                        -
-                                        </button>
+                                        > - </button>
 
                                         <input
                                             type="text"
@@ -258,24 +272,18 @@ export default function MainPage() {
                                                 text-lg w-8 h-8 bg-white/90 focus:outline-none border-none rounded-xl
                                                 flex items-center justify-center`}
                                             disabled={!isActive && mode === "Auto"}
-                                        >
-                                        +
-                                        </button>
+                                        > + </button>
                                     </div>
                                 </div>
                             </div>
                         </div>
                     </div>
 
-                    {/* Buttons */}
                     <div className="flex flex-row gap-3 items-end">
                         <div>
-                            {/* On/Off Status */}
                             <div className={`text-xs font-inter text-center mb-2 transition-all ${isActive ? "text-[#404040]" : "text-[#909090]"}`}>
                                 {isActive ? 'Active' : 'Inactive'}
                             </div>
-
-                            {/* On/Off Button */}
                             <button
                                 onClick={() => setIsActive(!isActive)}
                                 className="min-w-[100px] h-auto bg-white/90 px-8 py-2 rounded-2xl
@@ -285,7 +293,6 @@ export default function MainPage() {
                             </button>
                         </div>
 
-                        {/* Dropdownlist */}
                         <div className="relative">
                             <button
                                 onClick={() => setShowDropdown(!showDropdown)}
@@ -320,7 +327,7 @@ export default function MainPage() {
                     </div>
                 </div>
                 
-                {/* Sensor Card */}
+                {/* Sensor Card (ส่วนขวา) */}
                 <div className="min-w-[424px] bg-white/30 rounded-2xl font-bold font-inter text-[#404040]
                     p-[32px] gap-[16px] flex flex-col gap-4">
                     <div className="grid grid-cols-2 gap-4">
@@ -330,6 +337,7 @@ export default function MainPage() {
 
                     <div className="grid grid-cols-2 gap-4">
                         <SensorCard name="Fan" value={fanValue} display={fanValue ? "On" : "Off"} Icon={Fan} isActive={isActive}/>
+                        {/* Detection แสดงค่าจาก Google Sheet */}
                         <SensorCard name="Detection" value={detectionValue} display={detectionValue + (detectionValue <= 1 ? " person" : " people")} Icon={Users} isActive={isActive}/>
                     </div>
 
