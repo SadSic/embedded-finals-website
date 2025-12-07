@@ -24,7 +24,7 @@ interface SensorDataType {
     infrared: number | string;
     tracking: number | string;
     flame: number | string;
-    fan: boolean;
+    fan: number;
     updated: string;
     isConnected: boolean;
 }
@@ -46,7 +46,7 @@ export default function MainPage() {
         infrared: "-",
         tracking: 0,
         flame: "Safe",
-        fan: false,
+        fan: 0,
         updated: "-",
         isConnected: false,
     });
@@ -136,7 +136,7 @@ export default function MainPage() {
                         if (data.infrared !== undefined) newState.infrared = data.infrared;
                         if (data.tracking !== undefined) newState.tracking = data.tracking;
                         if (data.flame !== undefined) newState.flame = Number(data.flame) === 1 ? "FIRE!" : "Safe";
-                        if (data.fan !== undefined) newState.fan = Number(data.fan) === 1 ? "ON" : "OFF";
+                        if (data.fan !== undefined) newState.fan = Number(data.fan) === 1;
 
                         return { ...prev, ...newState };
                     });
@@ -173,7 +173,7 @@ export default function MainPage() {
     }, [sensorData.isConnected]);
 
     const detectionValue = validateData(sensorData.tracking);
-    const fanValue = sensorData.fan ? true : false;
+    const fanValue = sensorData.fan === 1 ? true : false;
     const tempValue = validateData(sensorData.temp);
     const humValue = validateData(sensorData.hum);
 
