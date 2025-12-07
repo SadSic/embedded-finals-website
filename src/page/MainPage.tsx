@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import SensorCard from "../component/SensorCard";
 import { Thermometer, Droplets, Fan, Users, ChevronDown } from "lucide-react";
 
@@ -15,7 +15,7 @@ interface SensorDataType {
     mic: number | string;
     tracking: number | string;
     flame: number | string;
-    fan: number | string;
+    fan: boolean;
     updated: string;
     isConnected: boolean;
 }
@@ -31,17 +31,19 @@ export default function MainPage() {
     const [mode, setMode] = useState("Auto");
 
     const [sensorData, setSensorData] = useState<SensorDataType>({
-        temp: "--",
-        hum: "--",
-        mic: "--",
-        tracking: "--",
-        flame: "--",
-        fan: "--",
+        temp: 0,
+        hum: 0,
+        mic: "-",
+        tracking: 0,
+        flame: "Safe",
+        fan: false,
         updated: "-",
         isConnected: false,
     });
 
     const [dots, setDots] = useState("");
+
+    const clientRef = useRef<any>(null);
 
     useEffect(() => {
         if (typeof (window as any).mqtt === 'undefined') {
@@ -49,79 +51,80 @@ export default function MainPage() {
             return;
         }
 
-        const client = (window as any).mqtt.connect(MQTT_URL, {
-            clientId:  CLIENT_ID,
-            username:  USERNAME,
-            password:  PASSWORD,
-            clean: true,
-            reconnectPeriod: 3000,
-        });
-
-        // --- Connection Handlers ---
-        client.on("connect", () => {
-            console.log("Connected to NetPIE");
-            setSensorData(prev => ({ ...prev, isConnected: true }));
-            
-            client.subscribe(TOPIC, { qos: 0 }, (err: any) => {
-                if (err) console.error("Subscribe error:", err);
-                else console.log("Subscribed to", TOPIC);
+        if (!clientRef.current) {
+            console.log("Initializing automatic MQTT connection...");
+            const client = (window as any).mqtt.connect(MQTT_URL, {
+                clientId: CLIENT_ID,
+                username: USERNAME,
+                password: PASSWORD,
+                clean: true,
+                reconnectPeriod: 3000,
             });
-        });
 
-        client.on("reconnect", () => {
-            setSensorData(prev => ({ ...prev, isConnected: false }));
-            console.log("Reconnecting...");
-        });
+            clientRef.current = client;
 
-        client.on("close", () => {
-            setSensorData(prev => ({ ...prev, isConnected: false }));
-            console.log("Connection closed");
-        });
-
-        client.on("error", (err: any) => {
-            console.error("MQTT Error:", err);
-        });
-
-        // --- Message Handler ---
-        client.on("message", (topic: string, message: any) => {
-            // console.log("Message:", topic, message.toString());
-            
-            try {
-                const data = JSON.parse(message.toString());
-                const now = new Date().toLocaleTimeString();
+            client.on("connect", () => {
+                console.log("Connected to NetPIE");
+                setSensorData(prev => ({ ...prev, isConnected: true }));
                 
-                setSensorData(prev => {
-                    const newState: Partial<SensorDataType> = { updated: now };
+                // Extra safety check before subscribing
+                if (client.connected) {
+                    client.subscribe(TOPIC, { qos: 0 }, (err: any) => {
+                        if (err) console.error("Subscribe error:", err);
+                        else console.log("Subscribed to", TOPIC);
+                    });
+                }
+            });
 
-                    if (typeof data.temp !== "undefined") newState.temp = Number(data.temp).toFixed(2);
-                    if (typeof data.hum !== "undefined") newState.hum = Number(data.hum).toFixed(2);
+            client.on("reconnect", () => {
+                setSensorData(prev => ({ ...prev, isConnected: false }));
+                console.log("Reconnecting...");
+            });
+
+            client.on("close", () => {
+                setSensorData(prev => ({ ...prev, isConnected: false }));
+                console.log("Connection closed");
+            });
+
+            client.on("message", (topic: string, message: any) => {
+                try {
+                    const data = JSON.parse(message.toString());
+                    const now = new Date().toLocaleTimeString();
                     
-                    // Simple pass-through for other sensors (matching consumer.js logic)
-                    if (typeof data.mic !== "undefined") newState.mic = data.mic;
-                    if (typeof data.tracking !== "undefined") newState.tracking = data.tracking;
+                    setSensorData(prev => {
+                        const newState: any = { updated: now };
 
-                    // Flame status mapping (assuming 1=FIRE, 0=Safe)
-                    if (typeof data.flame !== "undefined") {
-                        const hasFire = Number(data.flame) === 1;
-                        newState.flame = hasFire ? "FIRE!" : "Safe";
-                    }
+                        // Existing Data Parsing Logic
+                        if (data.temp !== undefined) newState.temp = Number(data.temp).toFixed(2);
+                        if (data.hum !== undefined) newState.hum = Number(data.hum).toFixed(2);
+                        if (data.mic !== undefined) newState.mic = data.mic;
+                        if (data.tracking !== undefined) newState.tracking = data.tracking;
 
-                    // Fan status mapping (assuming 1=ON, 0=OFF)
-                    if (typeof data.fan !== "undefined") {
-                        const fanOn = Number(data.fan) === 1;
-                        newState.fan = fanOn ? "ON" : "OFF";
-                    }
-                    
-                    return { ...prev, ...newState };
-                });
-            } catch (e) {
-                console.error("JSON parse error:", e);
-            }
-        });
+                        // Flame Mapping
+                        if (data.flame !== undefined) {
+                            newState.flame = Number(data.flame) === 1 ? "FIRE!" : "Safe";
+                        }
 
+                        // Fan Mapping
+                        if (data.fan !== undefined) {
+                            newState.fan = Number(data.fan) === 1 ? "ON" : "OFF";
+                        }
+                        
+                        return { ...prev, ...newState };
+                    });
+                } catch (e) {
+                    console.error("JSON parse error:", e);
+                }
+            });
+        }
+
+        // Cleanup: Closes connection when you leave the page
         return () => {
-            client.end();
-            console.log("MQTT client disconnected on component unmount.");
+            if (clientRef.current) {
+                console.log("MQTT client disconnected on component unmount.");
+                clientRef.current.end(true); // Force clear the connection
+                clientRef.current = null;
+            }
         };
     }, []);
 
@@ -141,7 +144,7 @@ export default function MainPage() {
     }, [sensorData.isConnected]);
 
     const detectionValue = typeof sensorData.tracking === 'number' ? sensorData.tracking : 0;
-    const fanValue = sensorData.fan === "ON";
+    const fanValue = sensorData.fan;
     const tempValue = typeof sensorData.temp === 'number' ? sensorData.temp : 0;
     const humValue = typeof sensorData.hum === 'number' ? sensorData.hum : 0;
 
