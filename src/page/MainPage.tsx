@@ -158,7 +158,7 @@ export default function MainPage() {
                         if (data.infrared !== undefined) newState.infrared = data.infrared;
                         if (data.tracking !== undefined) newState.tracking = data.tracking;
                         if (data.flame !== undefined) newState.flame = Number(data.flame) === 1 ? "FIRE!" : "Safe";
-                        if (data.fan !== undefined) newState.fan = Number(data.fan) === 1 ? "ON" : "OFF";
+                        if (data.fan !== undefined) newState.fan = Number(data.fan) === 1;
                         return { ...prev, ...newState };
                     });
                 } catch (e) {
@@ -248,7 +248,7 @@ export default function MainPage() {
                                 <div className="flex items-center justify-center">
                                     <div className="flex items-center gap-4">
                                         <button
-                                            onClick={() => setTemperature(boundValue(temperature - 1, 0, 100))}
+                                            onClick={() => setTemperature(boundValue(temperature - 0.5, 0, 100))}
                                             className={`${isActive && mode === "Auto" ? "text-[#404040] shadow-lg" : "text-[#909090] shadow-sm"}
                                                 text-lg w-8 h-8 bg-white/90 focus:outline-none border-none rounded-xl
                                                 flex items-center justify-center`}
@@ -257,7 +257,7 @@ export default function MainPage() {
 
                                         <input
                                             type="text"
-                                            value={temperature}
+                                            value={temperature.toFixed(1)}
                                             onChange={(e) => setTemperature(boundValue(Number(e.target.value), 0, 100))}
                                             disabled={!isActive}
                                             min={"0"}
@@ -266,7 +266,7 @@ export default function MainPage() {
                                         />
 
                                         <button
-                                            onClick={() => setTemperature(boundValue(temperature + 1, 0, 100))}
+                                            onClick={() => setTemperature(boundValue(temperature + 0.5, 0, 100))}
                                             className={`${isActive && mode === "Auto" ? "text-[#404040] shadow-lg" : "text-[#909090] shadow-sm"}
                                                 text-lg w-8 h-8 bg-white/90 focus:outline-none border-none rounded-xl
                                                 flex items-center justify-center`}
