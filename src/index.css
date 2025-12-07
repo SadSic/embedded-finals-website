@@ -37,6 +37,16 @@ body {
   font-family: 'Inter', sans-serif;
 }
 
+input::-webkit-outer-spin-button,
+input::-webkit-inner-spin-button {
+  -webkit-appearance: none;
+  margin: 0;
+}
+
+/* สำหรับ Firefox */
+input[type=number] {
+  -moz-appearance: textfield;
+}
 
 h1 {
   font-size: 3.2em;
