@@ -1,18 +1,18 @@
 import { useEffect, useRef, useState } from "react";
 import SensorCard from "../component/SensorCard";
-import { Thermometer, Droplets, Fan, Users, ChevronDown } from "lucide-react";
+import { Thermometer, Droplets, Fan, Users, ChevronDown} from "lucide-react";
 
 // JJ
 
-const CLIENT_ID = "7110f199-404c-4755-add4-03973643f106";   // Client ID ของ Device_2
-const USERNAME  = "3jxZsTrgy3bgoT1iCsW1R5sxPzW2QPEe";       // Token ของ Device_2
-const PASSWORD  = "xyqZj3vAwcLU6uwjwuURSnFiwAMkNy36";       // Secret ของ Device_2 หรือ "" ถ้าไม่ใช้
+// const CLIENT_ID = "7110f199-404c-4755-add4-03973643f106";   // Client ID ของ Device_2
+// const USERNAME  = "3jxZsTrgy3bgoT1iCsW1R5sxPzW2QPEe";       // Token ของ Device_2
+// const PASSWORD  = "xyqZj3vAwcLU6uwjwuURSnFiwAMkNy36";       // Secret ของ Device_2 หรือ "" ถ้าไม่ใช้
 
 // Peng
 
-// const CLIENT_ID = "22353c82-e331-4fef-9285-9a5e2d96301a";   // Client ID ของ Device_1
-// const USERNAME  = "8wV47wmmzgRF8Bsqnmeooa3NEgAiRNjp";       // Token ของ Device_1
-// const PASSWORD  = "b4xJ9ipYic88gyfMaX7NmiYJ5Ek6coiN";       // Secret ของ Device_1 หรือ "" ถ้าไม่ใช้
+const CLIENT_ID = "47c27d0b-7e62-459b-8163-c1d24351b8d1";   // Client ID ของ Device_1
+const USERNAME  = "MHX8XnbrSyJth41kr5Z9gTDURCoKgWPr";       // Token ของ Device_1
+const PASSWORD  = "APdgUtTcYStKPgWheTjwbBEenvojVJjx";       // Secret ของ Device_1 หรือ "" ถ้าไม่ใช้
 
 const TOPIC = "@msg/room1/sensor";
 const MQTT_URL = "wss://mqtt.netpie.io:443/mqtt";
@@ -38,6 +38,7 @@ export default function MainPage() {
     const [showDropdown, setShowDropdown] = useState(false);
     const [isActive, setIsActive] = useState(false);
     const [mode, setMode] = useState("Auto");
+    const [temperature, setTemperature] = useState<number>(25.0);
 
     const [sensorData, setSensorData] = useState<SensorDataType>({
         temp: 0,
@@ -53,6 +54,19 @@ export default function MainPage() {
     const [dots, setDots] = useState("");
 
     const clientRef = useRef<any>(null);
+
+    function validateData(value: string | number) {
+        if (typeof value === 'number') return value;
+        if (typeof Number(value) === 'number')  return Number(value)
+        return 0;
+    }
+
+    function boundValue(value: number, min: number, max: number) {
+        if(typeof value !== 'number') return 0;
+        if(value <= min) return min;
+        if(value >= max) return max;
+        return value;
+    }
 
     useEffect(() => {
         if (typeof (window as any).mqtt === 'undefined') {
@@ -158,10 +172,10 @@ export default function MainPage() {
         }
     }, [sensorData.isConnected]);
 
-    const detectionValue = typeof sensorData.tracking === 'number' ? sensorData.tracking : 0;
-    const fanValue = sensorData.fan;
-    const tempValue = typeof sensorData.temp === 'number' ? sensorData.temp : 0;
-    const humValue = typeof sensorData.hum === 'number' ? sensorData.hum : 0;
+    const detectionValue = validateData(sensorData.tracking);
+    const fanValue = sensorData.fan ? true : false;
+    const tempValue = validateData(sensorData.temp);
+    const humValue = validateData(sensorData.hum);
 
     return <div className="min-h-screen w-full flex flex-col items-center justify-center
         bg-[linear-gradient(45deg,_#B5728E_0%,_#DA7F7D_25%,_#EBB58A_75%,_#F4D797_100%)]">
@@ -193,76 +207,118 @@ export default function MainPage() {
                         ESP 32
                     </div>
                     
-                    {/* Status */}
-                    <div className="px-2 h-[160px] flex flex-row self-start justify-center mt-4">
-                        <div className="font-bold font-inter text-[#404040] text-md">
-                            Status: 
-                        </div>
+                    <div className="h-[160px] flex flex-col gap-6">
+                        {/* Status */}
+                        <div className="flex flex-row self-start justify-center">
+                            <div className="font-bold font-inter text-[#404040] text-md">
+                                Status: 
+                            </div>
 
-                        <div className={`h-4 w-4 rounded-full my-1 mx-2
-                        ${sensorData.isConnected ? "bg-[#22c55e]" : "bg-[#ef4444]"}`}></div>
+                            <div className="h-[25px] flex flex-row bg-white/90 mx-1 px-3 gap-1 rounded-full">
+                                <div className={`h-4 w-4 rounded-full my-1
+                                ${sensorData.isConnected ? "bg-[#22c55e]" : "bg-[#ef4444]"}`}></div>
 
-                        <div className={`font-medium font-inter text-md
-                                ${sensorData.isConnected ? "text-[#22c55e]" : "text-[#ef4444]"}`}>
-                            {sensorData.isConnected ? "Connected" : `Connecting${dots}`}
+                                <div className={`font-medium font-inter text-md
+                                        ${sensorData.isConnected ? "text-[#22c55e]" : "text-[#ef4444]"}`}>
+                                    {sensorData.isConnected ? "Connected" : `Connecting${dots}`}
+                                </div>
+                            </div>
                         </div>
-                        {/* <div className="text-xs text-[#909090] mt-1">Updated: {sensorData.updated}</div> */}
-                    </div>
-                    
                         
-
-                        {/* Buttons */}
-                        <div className="flex flex-row gap-3 items-end">
-                            <div>
-                                {/* On/Off Status */}
-                                <div className={`text-xs font-inter text-center mb-2 transition-all ${isActive ? "text-[#404040]" : "text-[#909090]"}`}>
-                                    {isActive ? 'Active' : 'Inactive'}
-                                </div>
-
-                                {/* On/Off Button */}
-                                <button
-                                    onClick={() => setIsActive(!isActive)}
-                                    className="min-w-[100px] h-auto bg-white/90 px-8 py-2 rounded-2xl
-                                    font-medium text-base text-[#404040] hover:scale-105 transition-all focus:outline-none border-none shadow-lg"
-                                >
-                                    On/Off
-                                </button>
-                            </div>
-
-                            {/* Dropdownlist */}
-                            <div className="relative">
-                                <button
-                                    onClick={() => setShowDropdown(!showDropdown)}
-                                    className={`w-[125px] h-auto bg-white/90 px-6 py-2 rounded-2xl font-medium
-                                        text-base transition-all ${isActive ? "text-[#404040] shadow-lg hover:scale-105 transition-all" : "text-[#909090] shadow-sm"}
-                                        flex items-center justify-between gap-2 focus:outline-none border-none`}
-                                    disabled={!isActive}
-                                    >
-                                    {mode}
-                                    <ChevronDown size={16} className={`transition-transform ${isActive ? "text-[#404040]" : "text-[#909090]"} ${showDropdown ? 'rotate-180' : ''}`} />
-                                </button>
-                                
-                                {showDropdown && (
-                                <div className="absolute top-full mt-2 left-0 right-0 bg-white rounded-2xl
-                                    shadow-xl overflow-hidden z-10">
-                                    {modes.map((m) => (
+                        <div className="space-y-4">
+                            <div className="flex flex-col">
+                                <label className="font-medium font-inter text-xs text-[#404040] mb-2">
+                                Enter Temperature ({temperature} °C)
+                                </label>
+                                <div className="flex items-center justify-center">
+                                    <div className="flex items-center gap-4">
                                         <button
-                                            key={m}
-                                            onClick={() => {
-                                                setMode(m)
-                                                setShowDropdown(false);
-                                            }}
-                                            className={`${m == mode ? "text-[#404040]" : "text-[#909090] hover:text-[#404040]"}
-                                                w-full focus:outline-none border-none shadow-md bg-white hover:bg-[#EFEFEF]`}
+                                            onClick={() => setTemperature(boundValue(temperature - 1, 0, 100))}
+                                            className={`${isActive && mode === "Auto" ? "text-[#404040] shadow-lg" : "text-[#909090] shadow-sm"}
+                                                text-lg w-8 h-8 bg-white/90 focus:outline-none border-none rounded-xl
+                                                flex items-center justify-center`}
+                                            disabled={!isActive && mode === "Auto"}
                                         >
-                                            {m}
+                                        -
                                         </button>
-                                    ))}
+
+                                        <input
+                                            type="text"
+                                            value={temperature}
+                                            onChange={(e) => setTemperature(boundValue(Number(e.target.value), 0, 100))}
+                                            disabled={!isActive}
+                                            min={"0"}
+                                            className={`w-16 h-16 text-2xl ${isActive && mode === "Auto" ? "text-[#404040] shadow-lg" : "text-[#909090] shadow-sm"}
+                                                font-inter font-bold text-center bg-white/90 rounded-full outline-none`}
+                                        />
+
+                                        <button
+                                            onClick={() => setTemperature(boundValue(temperature + 1, 0, 100))}
+                                            className={`${isActive && mode === "Auto" ? "text-[#404040] shadow-lg" : "text-[#909090] shadow-sm"}
+                                                text-lg w-8 h-8 bg-white/90 focus:outline-none border-none rounded-xl
+                                                flex items-center justify-center`}
+                                            disabled={!isActive && mode === "Auto"}
+                                        >
+                                        +
+                                        </button>
+                                    </div>
                                 </div>
-                                )}
                             </div>
                         </div>
                     </div>
+
+                    {/* Buttons */}
+                    <div className="flex flex-row gap-3 items-end">
+                        <div>
+                            {/* On/Off Status */}
+                            <div className={`text-xs font-inter text-center mb-2 transition-all ${isActive ? "text-[#404040]" : "text-[#909090]"}`}>
+                                {isActive ? 'Active' : 'Inactive'}
+                            </div>
+
+                            {/* On/Off Button */}
+                            <button
+                                onClick={() => setIsActive(!isActive)}
+                                className="min-w-[100px] h-auto bg-white/90 px-8 py-2 rounded-2xl
+                                font-medium text-base text-[#404040] hover:scale-105 transition-all focus:outline-none border-none shadow-lg"
+                            >
+                                On/Off
+                            </button>
+                        </div>
+
+                        {/* Dropdownlist */}
+                        <div className="relative">
+                            <button
+                                onClick={() => setShowDropdown(!showDropdown)}
+                                className={`w-[125px] h-auto bg-white/90 px-6 py-2 rounded-2xl font-medium
+                                    text-base transition-all ${isActive ? "text-[#404040] shadow-lg hover:scale-105 transition-all" : "text-[#909090] shadow-sm"}
+                                    flex items-center justify-between gap-2 focus:outline-none border-none`}
+                                disabled={!isActive}
+                            >
+                                {mode}
+                                <ChevronDown size={16} className={`transition-transform ${isActive ? "text-[#404040]" : "text-[#909090]"} ${showDropdown ? 'rotate-180' : ''}`} />
+                            </button>
+                            
+                            {showDropdown && (
+                            <div className="absolute top-full mt-2 left-0 right-0 bg-white rounded-2xl
+                                shadow-xl overflow-hidden z-10">
+                                {modes.map((m) => (
+                                    <button
+                                        key={m}
+                                        onClick={() => {
+                                            setMode(m)
+                                            setShowDropdown(false);
+                                        }}
+                                        className={`${m == mode ? "text-[#404040]" : "text-[#909090] hover:text-[#404040]"}
+                                            w-full focus:outline-none border-none shadow-md bg-white hover:bg-[#EFEFEF]`}
+                                    >
+                                    {m}
+                                    </button>
+                                ))}
+                            </div>
+                            )}
+                        </div>
+                    </div>
+                </div>
                 
                 {/* Sensor Card */}
                 <div className="min-w-[424px] bg-white/30 rounded-2xl font-bold font-inter text-[#404040]
