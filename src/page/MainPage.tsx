@@ -10,15 +10,15 @@ import { Thermometer, Droplets, Fan, Users, ChevronDown} from "lucide-react";
 
 // Peng
 
-// const CLIENT_ID = "47c27d0b-7e62-459b-8163-c1d24351b8d1";   // Client ID ของ Device_1
-// const USERNAME  = "MHX8XnbrSyJth41kr5Z9gTDURCoKgWPr";       // Token ของ Device_1
-// const PASSWORD  = "APdgUtTcYStKPgWheTjwbBEenvojVJjx";       // Secret ของ Device_1 หรือ "" ถ้าไม่ใช้
+const CLIENT_ID = "47c27d0b-7e62-459b-8163-c1d24351b8d1";   // Client ID ของ Device_1
+const USERNAME  = "MHX8XnbrSyJth41kr5Z9gTDURCoKgWPr";       // Token ของ Device_1
+const PASSWORD  = "APdgUtTcYStKPgWheTjwbBEenvojVJjx";       // Secret ของ Device_1 หรือ "" ถ้าไม่ใช้
 
 
 // Pai
-const CLIENT_ID = "c0809376-3f43-4d32-b508-f684fa070dd8";   // Client ID ของ Device_1
-const USERNAME  = "K5bbdbWjJUWRor9bSaMBCzKpd69F33BF";       // Token ของ Device_2
-const PASSWORD  = "geYMVXufQb24HW7wxWcqRcGBwSDt9MnW";       // Secret ของ Device_2 หรือ "" ถ้าไม่ใช้
+// const CLIENT_ID = "c0809376-3f43-4d32-b508-f684fa070dd8";   // Client ID ของ Device_1
+// const USERNAME  = "K5bbdbWjJUWRor9bSaMBCzKpd69F33BF";       // Token ของ Device_2
+// const PASSWORD  = "geYMVXufQb24HW7wxWcqRcGBwSDt9MnW";       // Secret ของ Device_2 หรือ "" ถ้าไม่ใช้
 
 const TOPIC = "@msg/room1/sensor";
 const MQTT_URL = "wss://mqtt.netpie.io:443/mqtt";
@@ -249,7 +249,7 @@ export default function MainPage() {
                                 <div className="flex items-center justify-center">
                                     <div className="flex items-center gap-4">
                                         <button
-                                            onClick={() => setTemperature(boundValue(temperature - 1, 0, 100))}
+                                            onClick={() => setTemperature(boundValue(temperature - 0.5, 0, 100))}
                                             className={`${isActive && mode === "Auto" ? "text-[#404040] shadow-lg" : "text-[#909090] shadow-sm"}
                                                 text-lg w-8 h-8 bg-white/90 focus:outline-none border-none rounded-xl
                                                 flex items-center justify-center`}
@@ -258,7 +258,7 @@ export default function MainPage() {
 
                                         <input
                                             type="text"
-                                            value={temperature}
+                                            value={temperature.toFixed(1)}
                                             onChange={(e) => setTemperature(boundValue(Number(e.target.value), 0, 100))}
                                             disabled={!isActive}
                                             min={"0"}
@@ -267,7 +267,7 @@ export default function MainPage() {
                                         />
 
                                         <button
-                                            onClick={() => setTemperature(boundValue(temperature + 1, 0, 100))}
+                                            onClick={() => setTemperature(boundValue(temperature + 0.5, 0, 100))}
                                             className={`${isActive && mode === "Auto" ? "text-[#404040] shadow-lg" : "text-[#909090] shadow-sm"}
                                                 text-lg w-8 h-8 bg-white/90 focus:outline-none border-none rounded-xl
                                                 flex items-center justify-center`}
