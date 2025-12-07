@@ -12,7 +12,7 @@ const MQTT_URL = "wss://mqtt.netpie.io:443/mqtt"
 interface SensorDataType {
     temp: number | string;
     hum: number | string;
-    mic: number | string;
+    infrared: number | string;
     tracking: number | string;
     flame: number | string;
     fan: number | string;
@@ -33,7 +33,7 @@ export default function MainPage() {
     const [sensorData, setSensorData] = useState<SensorDataType>({
         temp: "--",
         hum: "--",
-        mic: "--",
+        infrared: "--",
         tracking: "--",
         flame: "--",
         fan: "--",
@@ -97,7 +97,7 @@ export default function MainPage() {
                     if (typeof data.hum !== "undefined") newState.hum = Number(data.hum).toFixed(2);
                     
                     // Simple pass-through for other sensors (matching consumer.js logic)
-                    if (typeof data.mic !== "undefined") newState.mic = data.mic;
+                    if (typeof data.infrared !== "undefined") newState.infrared = data.infrared;
                     if (typeof data.tracking !== "undefined") newState.tracking = data.tracking;
 
                     // Flame status mapping (assuming 1=FIRE, 0=Safe)
