@@ -5,7 +5,7 @@ export default function SensorCard({name, value, display, Icon, isActive}:
     return <div className="h-[102px] w-[172px] bg-white/40 rounded-2xl p-[16px] flex flex-col items-start
                 shadow-lg">
         <div className="flex items-center gap-2">
-            <Icon className={`w-6 h-6 ${value == true && isActive ? "animate-spin" : ''}`} />
+            <Icon className={`w-6 h-6 ${value === true && isActive ? "animate-spin" : ''}`} />
             <span className="font-normal font-inter text-base text-[#404040]">{name}</span>
         </div>
 

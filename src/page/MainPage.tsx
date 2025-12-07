@@ -20,7 +20,7 @@ interface SensorDataType {
     isConnected: boolean;
 }
 
-const stopLoadingDots = true
+const stopLoadingDots = !true
 
 export default function MainPage() {
 
@@ -140,140 +140,144 @@ export default function MainPage() {
         }
     }, [sensorData.isConnected]);
 
-    const detectionValue = sensorData.tracking === "1" ? 1 : 0;
+    const detectionValue = typeof sensorData.tracking === 'number' ? sensorData.tracking : 0;
     const fanValue = sensorData.fan === "ON";
-    const tempValue = typeof sensorData.temp === 'number' ? sensorData.temp : parseFloat(sensorData.temp.toString() || '0');
-    const humValue = typeof sensorData.hum === 'number' ? sensorData.hum : parseFloat(sensorData.hum.toString() || '0');
+    const tempValue = typeof sensorData.temp === 'number' ? sensorData.temp : 0;
+    const humValue = typeof sensorData.hum === 'number' ? sensorData.hum : 0;
 
     return <div className="min-h-screen w-full flex flex-col items-center justify-center
         bg-[linear-gradient(45deg,_#B5728E_0%,_#DA7F7D_25%,_#EBB58A_75%,_#F4D797_100%)]">
-        {/* Header */}
-        <h1 className="text-[#404040] font-bold font-inter mb-6">Smart Pudlom</h1>
+        
+        
+        <div className="backdrop-blur-2xl bg-white/30 border border-white/30 rounded-3xl
+                p-10 text-white flex flex-col p-[48px] gap-[24px] items-center">
+            {/* Header */}
+            <h1 className="text-[#404040] font-bold font-inter">Smart Pudlom</h1>
 
-        {/* Card */}
-        <div className="relative backdrop-blur-2xl bg-white/30 border border-white/20 rounded-3xl
-            p-10 text-white flex flex-row p-[48px] gap-[16px]">
+            {/* Card */}
+            <div className="flex flex-row gap-[16px]">
 
-            {/* ESP */}
-            <div className="bg-white/30 rounded-2xl font-bold font-inter text-[#404040] p-[32px]
-                flex flex-col items-center justify-between">
-                {/* Image */}
-                <div className="w-[150px] h-[150px] rounded-full bg-white shadow-lg flex
-                    items-center justify-center overflow-hidden">
-                    <img
-                        src=".\src\assets\esp32.png"
-                        alt="board"
-                        className="w-[150px] h-[150px] object-contain"
-                    />
-                </div>
-
-                {/* Name */}
-                <div className="font-bold font-inter text-[#404040] text-2xl mt-4">
-                    ESP 32
-                </div>
-                
-                {/* Status */}
-                <div className="px-2 h-[160px] flex flex-row self-start justify-center mt-4">
-                    <div className="font-bold font-inter text-[#404040] text-md">
-                        Status: 
+                {/* ESP */}
+                <div className="bg-white/30 rounded-2xl font-bold font-inter text-[#404040] p-[32px]
+                    flex flex-col items-center justify-between">
+                    {/* Image */}
+                    <div className="w-[150px] h-[150px] rounded-full bg-white shadow-lg flex
+                        items-center justify-center overflow-hidden">
+                        <img
+                            src=".\src\assets\esp32.png"
+                            alt="board"
+                            className="w-[150px] h-[150px] object-contain"
+                        />
                     </div>
 
-                    <div className={`h-4 w-4 rounded-full my-1 mx-2
-                    ${sensorData.isConnected ? "bg-[#22c55e]" : "bg-[#ef4444]"}`}></div>
-
-                    <div className={`font-medium font-inter text-md
-                            ${sensorData.isConnected ? "text-[#22c55e]" : "text-[#ef4444]"}`}>
-                        {sensorData.isConnected ? "Connected" : `Connecting${dots}`}
+                    {/* Name */}
+                    <div className="font-bold font-inter text-[#404040] text-2xl mt-4">
+                        ESP 32
                     </div>
-                    {/* <div className="text-xs text-[#909090] mt-1">Updated: {sensorData.updated}</div> */}
-                </div>
-                
                     
-
-                    {/* Buttons */}
-                    <div className="flex flex-row gap-3 items-end">
-                        <div>
-                            {/* On/Off Status */}
-                            <div className={`text-xs font-inter text-center mb-2 transition-all ${isActive ? "text-[#404040]" : "text-[#909090]"}`}>
-                                {isActive ? 'Active' : 'Inactive'}
-                            </div>
-
-                            {/* On/Off Button */}
-                            <button
-                                onClick={() => setIsActive(!isActive)}
-                                className="min-w-[100px] h-auto bg-white/90 px-8 py-2 rounded-2xl
-                                font-medium text-base text-[#404040] hover:scale-105 transition-all focus:outline-none border-none shadow-lg"
-                            >
-                                On/Off
-                            </button>
+                    {/* Status */}
+                    <div className="px-2 h-[160px] flex flex-row self-start justify-center mt-4">
+                        <div className="font-bold font-inter text-[#404040] text-md">
+                            Status: 
                         </div>
 
-                        {/* Dropdownlist */}
-                        <div className="relative">
-                            <button
-                                onClick={() => setShowDropdown(!showDropdown)}
-                                className={`w-[125px] h-auto bg-white/90 px-6 py-2 rounded-2xl font-medium
-                                    text-base transition-all ${isActive ? "text-[#404040] shadow-lg hover:scale-105 transition-all" : "text-[#909090] shadow-sm"}
-                                    flex items-center justify-between gap-2 focus:outline-none border-none`}
-                                disabled={!isActive}
+                        <div className={`h-4 w-4 rounded-full my-1 mx-2
+                        ${sensorData.isConnected ? "bg-[#22c55e]" : "bg-[#ef4444]"}`}></div>
+
+                        <div className={`font-medium font-inter text-md
+                                ${sensorData.isConnected ? "text-[#22c55e]" : "text-[#ef4444]"}`}>
+                            {sensorData.isConnected ? "Connected" : `Connecting${dots}`}
+                        </div>
+                        {/* <div className="text-xs text-[#909090] mt-1">Updated: {sensorData.updated}</div> */}
+                    </div>
+                    
+                        
+
+                        {/* Buttons */}
+                        <div className="flex flex-row gap-3 items-end">
+                            <div>
+                                {/* On/Off Status */}
+                                <div className={`text-xs font-inter text-center mb-2 transition-all ${isActive ? "text-[#404040]" : "text-[#909090]"}`}>
+                                    {isActive ? 'Active' : 'Inactive'}
+                                </div>
+
+                                {/* On/Off Button */}
+                                <button
+                                    onClick={() => setIsActive(!isActive)}
+                                    className="min-w-[100px] h-auto bg-white/90 px-8 py-2 rounded-2xl
+                                    font-medium text-base text-[#404040] hover:scale-105 transition-all focus:outline-none border-none shadow-lg"
                                 >
-                                {mode}
-                                <ChevronDown size={16} className={`transition-transform ${isActive ? "text-[#404040]" : "text-[#909090]"} ${showDropdown ? 'rotate-180' : ''}`} />
-                            </button>
-                            
-                            {showDropdown && (
-                            <div className="absolute top-full mt-2 left-0 right-0 bg-white rounded-2xl
-                                shadow-xl overflow-hidden z-10">
-                                {modes.map((m) => (
-                                    <button
-                                        key={m}
-                                        onClick={() => {
-                                            setMode(m)
-                                            setShowDropdown(false);
-                                        }}
-                                        className={`${m == mode ? "text-[#404040]" : "text-[#909090] hover:text-[#404040]"}
-                                            w-full focus:outline-none border-none shadow-md bg-white hover:bg-[#EFEFEF]`}
-                                    >
-                                        {m}
-                                    </button>
-                                ))}
+                                    On/Off
+                                </button>
                             </div>
-                            )}
+
+                            {/* Dropdownlist */}
+                            <div className="relative">
+                                <button
+                                    onClick={() => setShowDropdown(!showDropdown)}
+                                    className={`w-[125px] h-auto bg-white/90 px-6 py-2 rounded-2xl font-medium
+                                        text-base transition-all ${isActive ? "text-[#404040] shadow-lg hover:scale-105 transition-all" : "text-[#909090] shadow-sm"}
+                                        flex items-center justify-between gap-2 focus:outline-none border-none`}
+                                    disabled={!isActive}
+                                    >
+                                    {mode}
+                                    <ChevronDown size={16} className={`transition-transform ${isActive ? "text-[#404040]" : "text-[#909090]"} ${showDropdown ? 'rotate-180' : ''}`} />
+                                </button>
+                                
+                                {showDropdown && (
+                                <div className="absolute top-full mt-2 left-0 right-0 bg-white rounded-2xl
+                                    shadow-xl overflow-hidden z-10">
+                                    {modes.map((m) => (
+                                        <button
+                                            key={m}
+                                            onClick={() => {
+                                                setMode(m)
+                                                setShowDropdown(false);
+                                            }}
+                                            className={`${m == mode ? "text-[#404040]" : "text-[#909090] hover:text-[#404040]"}
+                                                w-full focus:outline-none border-none shadow-md bg-white hover:bg-[#EFEFEF]`}
+                                        >
+                                            {m}
+                                        </button>
+                                    ))}
+                                </div>
+                                )}
+                            </div>
                         </div>
                     </div>
-                </div>
-            
-            {/* Sensor Card */}
-            <div className="min-w-[424px] bg-white/30 rounded-2xl font-bold font-inter text-[#404040]
-                p-[32px] gap-[16px] flex flex-col gap-4">
-                <div className="grid grid-cols-2 gap-4">
-                    <SensorCard name="Temperature" value={tempValue} display={tempValue + " °C"} Icon={Thermometer} isActive={isActive}/>
-                    <SensorCard name="Humidity" value={humValue} display={humValue + " %"} Icon={Droplets} isActive={isActive}/>
-                </div>
+                
+                {/* Sensor Card */}
+                <div className="min-w-[424px] bg-white/30 rounded-2xl font-bold font-inter text-[#404040]
+                    p-[32px] gap-[16px] flex flex-col gap-4">
+                    <div className="grid grid-cols-2 gap-4">
+                        <SensorCard name="Temperature" value={tempValue} display={tempValue + " °C"} Icon={Thermometer} isActive={isActive}/>
+                        <SensorCard name="Humidity" value={humValue} display={humValue + " %"} Icon={Droplets} isActive={isActive}/>
+                    </div>
 
-                <div className="grid grid-cols-2 gap-4">
-                    <SensorCard name="Fan" value={fanValue} display={fanValue ? "On" : "Off"} Icon={Fan} isActive={isActive}/>
-                    <SensorCard name="Detection" value={detectionValue} display={detectionValue + (detectionValue === 1 ? " person" : " people")} Icon={Users} isActive={isActive}/>
-                </div>
+                    <div className="grid grid-cols-2 gap-4">
+                        <SensorCard name="Fan" value={fanValue} display={fanValue ? "On" : "Off"} Icon={Fan} isActive={isActive}/>
+                        <SensorCard name="Detection" value={detectionValue} display={detectionValue + (detectionValue <= 1 ? " person" : " people")} Icon={Users} isActive={isActive}/>
+                    </div>
 
-                <div className="w-auto bg-white/40 rounded-2xl font-bold font-inter text-[#404040] p-[32px]
-                    gap-[16px] flex flex-col items-start shadow-lg">
-                    <div className="font-bold font-inter text-2xl text-[#404040]">Choose a song!</div>
-                    <span className={`font-normal font-inter text-base 
-                            ${isActive ? "hover:underline cursor-pointer text-[#404040" : "text-[#909090]"}`}
-                            onClick={() => console.log("1")}>
-                        1. Happy Birthday
-                    </span>
-                    <span className={`font-normal font-inter text-base 
-                            ${isActive ? "hover:underline cursor-pointer text-[#404040" : "text-[#909090]"}`}
-                            onClick={() => console.log("2")}>
-                        2. Nokia
-                    </span>
-                    <span className={`font-normal font-inter text-base 
-                            ${isActive ? "hover:underline cursor-pointer text-[#404040" : "text-[#909090]"}`}
-                            onClick={() => console.log("3")}>
-                        3. Merry Christmas
-                    </span>
+                    <div className="w-auto bg-white/40 rounded-2xl font-bold font-inter text-[#404040] p-[32px]
+                        gap-[16px] flex flex-col items-start shadow-lg">
+                        <div className="font-bold font-inter text-2xl text-[#404040]">Choose a song!</div>
+                        <span className={`font-normal font-inter text-base 
+                                ${isActive ? "hover:underline cursor-pointer text-[#404040" : "text-[#909090]"}`}
+                                onClick={() => console.log("1")}>
+                            1. Happy Birthday
+                        </span>
+                        <span className={`font-normal font-inter text-base 
+                                ${isActive ? "hover:underline cursor-pointer text-[#404040" : "text-[#909090]"}`}
+                                onClick={() => console.log("2")}>
+                            2. Nokia
+                        </span>
+                        <span className={`font-normal font-inter text-base 
+                                ${isActive ? "hover:underline cursor-pointer text-[#404040" : "text-[#909090]"}`}
+                                onClick={() => console.log("3")}>
+                            3. Merry Christmas
+                        </span>
+                    </div>
                 </div>
             </div>
         </div>
