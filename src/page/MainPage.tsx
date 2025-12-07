@@ -4,9 +4,9 @@ import { Thermometer, Droplets, Fan, Users, ChevronDown} from "lucide-react";
 
 // JJ
 
-// const CLIENT_ID = "7110f199-404c-4755-add4-03973643f106";   // Client ID ของ Device_2
-// const USERNAME  = "3jxZsTrgy3bgoT1iCsW1R5sxPzW2QPEe";       // Token ของ Device_2
-// const PASSWORD  = "xyqZj3vAwcLU6uwjwuURSnFiwAMkNy36";       // Secret ของ Device_2 หรือ "" ถ้าไม่ใช้
+const CLIENT_ID = "7110f199-404c-4755-add4-03973643f106";   // Client ID ของ Device_2
+const USERNAME  = "3jxZsTrgy3bgoT1iCsW1R5sxPzW2QPEe";       // Token ของ Device_2
+const PASSWORD  = "xyqZj3vAwcLU6uwjwuURSnFiwAMkNy36";       // Secret ของ Device_2 หรือ "" ถ้าไม่ใช้
 
 // Peng
 
@@ -16,9 +16,9 @@ import { Thermometer, Droplets, Fan, Users, ChevronDown} from "lucide-react";
 
 
 // Pai
-const CLIENT_ID = "c0809376-3f43-4d32-b508-f684fa070dd8";   // Client ID ของ Device_1
-const USERNAME  = "K5bbdbWjJUWRor9bSaMBCzKpd69F33BF";       // Token ของ Device_2
-const PASSWORD  = "geYMVXufQb24HW7wxWcqRcGBwSDt9MnW";       // Secret ของ Device_2 หรือ "" ถ้าไม่ใช้
+// const CLIENT_ID = "c0809376-3f43-4d32-b508-f684fa070dd8";   // Client ID ของ Device_1
+// const USERNAME  = "K5bbdbWjJUWRor9bSaMBCzKpd69F33BF";       // Token ของ Device_2
+// const PASSWORD  = "geYMVXufQb24HW7wxWcqRcGBwSDt9MnW";       // Secret ของ Device_2 หรือ "" ถ้าไม่ใช้
 
 const TOPIC = "@msg/room1/sensor";
 const MQTT_URL = "wss://mqtt.netpie.io:443/mqtt";
@@ -31,7 +31,7 @@ interface SensorDataType {
     infrared: number | string;
     tracking: number | string;
     flame: number | string;
-    fan: number;
+    fan: boolean;
     updated: string;
     isConnected: boolean;
 }
@@ -56,7 +56,7 @@ export default function MainPage() {
         infrared: "-",
         tracking: 0, // ค่านี้จะไม่ถูกใช้แสดงผลแล้ว จะใช้ sheetDetection แทน
         flame: "Safe",
-        fan: 0,
+        fan: false,
         updated: "-",
         isConnected: false,
     });
@@ -158,8 +158,7 @@ export default function MainPage() {
                         if (data.infrared !== undefined) newState.infrared = data.infrared;
                         if (data.tracking !== undefined) newState.tracking = data.tracking;
                         if (data.flame !== undefined) newState.flame = Number(data.flame) === 1 ? "FIRE!" : "Safe";
-                        if (data.fan !== undefined) newState.fan = Number(data.fan) === 1;
-
+                        if (data.fan !== undefined) newState.fan = Number(data.fan) === 1 ? "ON" : "OFF";
                         return { ...prev, ...newState };
                     });
                 } catch (e) {
@@ -194,7 +193,7 @@ export default function MainPage() {
     // ใหม่: ใช้ค่าจาก Google Sheet
     const detectionValue = validateData(sheetDetection); 
     
-    const fanValue = sensorData.fan === 1 ? true : false;
+    const fanValue = sensorData.fan ? true : false;
     const tempValue = validateData(sensorData.temp);
     const humValue = validateData(sensorData.hum);
 
