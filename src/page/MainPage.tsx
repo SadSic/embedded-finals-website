@@ -31,7 +31,7 @@ const CONTROL_TOPIC = "@msg/room1/control"; // Web -> ESP32
 const MQTT_URL = "wss://mqtt.netpie.io:443/mqtt";
 
 const GOOGLE_SHEET_URL =
-  "https://script.google.com/macros/s/AKfycbxeEBXZL9YmiKC71RUnP5iUjRfd23iyb2_i1mhMh34fvLOI4nQb7pWq9L-dm2qpMYGHw/exec";
+  "https://script.google.com/macros/s/AKfycbyEoQ_fd_QG8LNDAdrZFW89RGRmov4SaZOVoC0urXaHupt9RcKVssrIAJ58fiXJUxELMg/exec";
 
 interface SensorDataType {
   temp: number | string;
@@ -82,6 +82,7 @@ export default function MainPage() {
 
   function boundValue(value: number, min: number, max: number) {
     if (typeof value !== "number") return 0;
+    if (!value) return 0;
     if (value <= min) return min;
     if (value >= max) return max;
     return value;
@@ -317,7 +318,7 @@ export default function MainPage() {
                         value={temperature}
                         onChange={(e) =>
                           setTemperature(
-                            boundValue(Number(e.target.value), 0, 100)
+                            validateData(boundValue(Number(e.target.value), 0, 100))
                           )
                         }
                         disabled={!isActive}
